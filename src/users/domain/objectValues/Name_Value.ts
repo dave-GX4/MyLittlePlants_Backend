@@ -14,13 +14,14 @@ export class NameValue {
     }
 
     private regexName(){
-        const re = /^[a-zA-Z\s]+$/;
+        // Expresión regular que acepta letras (mayúsculas y minúsculas), espacios y caracteres acentuados
+        const re = /^[a-zA-Z\u00C0-\u00FF\s]+$/;
         if (!re.test(this.value)) {
-            throw new Error("Solo se acepta letras y espacios.");
+            throw new Error("Solo se acepta letras, espacios y caracteres acentuados en el nombre de usuario.");
         }
 
-        if (this.value.length > 0 && !/^[A-Z]/.test(this.value)) {
-            throw new Error("El nombre debe comenzar con una letra mayúscula.");
+        if (this.value.length > 0 && !/^[A-Z\u00C0-\u00D6\u00D8-\u00DE]/.test(this.value)) {
+            throw new Error("El nombre debe comenzar con una letra mayúscula (incluyendo mayúsculas acentuadas).");
         }
     }
 }

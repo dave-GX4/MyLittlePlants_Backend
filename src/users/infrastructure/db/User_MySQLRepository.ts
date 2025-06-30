@@ -42,6 +42,34 @@ export class UserMySQLRepository implements UserRepository {
     }
   }
 
+  async finedByEmail(email: string): Promise<User | null> {
+      const connection = this.getConnection();
+      
+      const conn = await connection;
+    try {
+      const [rows]: any = await conn.execute(
+        `SELECT * FROM users WHERE email = ?`,
+        [email]
+      );
+
+      if (rows.length === 0) {
+        return null; // No user found with the given email
+      }
+
+      const userData = rows[0];
+      return new User(
+        new NameValue(userData.name),
+        new EmailValue(userData.email),
+        new PasswordValue(userData.password),
+        userData.phone ? new PhoneValue(userData.phone) : undefined,
+        userData.id // Asegúrate de que tu entidad User acepta el ID en el constructor
+      );
+    } catch (error) {
+      console.error("Error fetching user by email from MySQL:", error);
+      throw new Error("Failed to fetch user by email from database");
+    }
+  }
+
   async getById(id: number): Promise<User> {
     const connection = await this.getConnection();
     

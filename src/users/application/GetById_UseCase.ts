@@ -10,6 +10,6 @@ export class GetByIdUseCase {
 
         if (!user) throw new NotFoundError(`User with id ${id} not found`);
         
-        return this.repository.getById(id);
+        return user;
     }
 }
