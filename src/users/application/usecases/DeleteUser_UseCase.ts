@@ -1,8 +1,8 @@
-import { UserRepository } from "../domain/User_Repository";
-import { NotFoundError } from "../domain/objectValues/NotFoundError";
+import { UserRepository } from "../../domain/User_Repository";
+import { NotFoundError } from "../../domain/entities/objectValues/NotFoundError";
 
 export class DeleteUserUseCase {
-    constructor(private repository: UserRepository) {}
+    constructor(private readonly repository: UserRepository) {}
 
     async run(id: number): Promise<void> {
         // Validación básica del ID

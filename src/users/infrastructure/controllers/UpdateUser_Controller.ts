@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { UpdateUserUseCase } from '../../application/UpdateUser_UseCase';
-import { NotFoundError } from '../../domain/objectValues/NotFoundError';
+import { UpdateUserUseCase } from '../../application/usecases/UpdateUser_UseCase';
+import { NotFoundError } from '../../domain/entities/objectValues/NotFoundError';
 
 export class UpdateUserController {
-  constructor(private updateUserUseCase: UpdateUserUseCase) {}
+  constructor(private readonly updateUserUseCase: UpdateUserUseCase) {}
 
   async run(req: Request, res: Response): Promise<void> {
     try {

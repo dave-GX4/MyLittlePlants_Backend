@@ -1,7 +1,7 @@
-import { EmailValue } from "../objectValues/Email_Value";
-import { NameValue } from "../objectValues/Name_Value";
-import { PasswordValue } from "../objectValues/Password_Value";
-import { PhoneValue } from "../objectValues/Phone_Value";
+import { EmailValue } from "./objectValues/Email_Value";
+import { NameValue } from "./objectValues/Name_Value";
+import { PasswordValue } from "./objectValues/Password_Value";
+import { PhoneValue } from "./objectValues/Phone_Value";
 
 export class User {
     id?: number;

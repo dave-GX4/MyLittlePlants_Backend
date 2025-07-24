@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { GetByIdUseCase } from '../../application/GetById_UseCase';
-import { NotFoundError } from '../../domain/objectValues/NotFoundError';
+import { GetByIdUseCase } from '../../application/usecases/GetById_UseCase';
+import { NotFoundError } from '../../domain/entities/objectValues/NotFoundError';
 
 export class GetByIdController {
     constructor(private readonly getByIdUseCase: GetByIdUseCase) {}
@@ -17,21 +17,12 @@ export class GetByIdController {
                 return;
             }
 
-            // Ejecutar el caso de uso
-            const user = await this.getByIdUseCase.run(id);
-
-            // Convertir a DTO para la respuesta
-            const userResponse = {
-                id: user.id,
-                name: user.name.value,
-                email: user.email.value,
-                phone: user.phone?.value ?? null
-                // Excluir información sensible como password
-            };
+            // Ejecutar el caso de uso que ahora devuelve UserResponse
+            const userResponse = await this.getByIdUseCase.run(id);
 
             res.status(200).json({
                 success: true,
-                data: userResponse
+                data: userResponse // Usamos el DTO directamente
             });
 
         } catch (error) {

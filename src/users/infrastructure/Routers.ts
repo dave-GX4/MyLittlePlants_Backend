@@ -5,7 +5,7 @@ import {
   getAllController,
   updateUserController,
   deleteUserController,
-  finedByEmailController
+  finedByEmailController,
 } from './Dependencies';
 
 const userRouter = Router();

@@ -1,10 +1,10 @@
 import { MySQLClient } from "../../../core/db_MySQL";
 import { User } from "../../domain/entities/User";
-import { EmailValue } from "../../domain/objectValues/Email_Value";
-import { NameValue } from "../../domain/objectValues/Name_Value";
-import { NotFoundError } from "../../domain/objectValues/NotFoundError";
-import { PasswordValue } from "../../domain/objectValues/Password_Value";
-import { PhoneValue } from "../../domain/objectValues/Phone_Value";
+import { EmailValue } from "../../domain/entities/objectValues/Email_Value";
+import { NameValue } from "../../domain/entities/objectValues/Name_Value";
+import { NotFoundError } from "../../domain/entities/objectValues/NotFoundError";
+import { PasswordValue } from "../../domain/entities/objectValues/Password_Value";
+import { PhoneValue } from "../../domain/entities/objectValues/Phone_Value";
 import { UserRepository } from "../../domain/User_Repository";
 
 export class UserMySQLRepository implements UserRepository {
