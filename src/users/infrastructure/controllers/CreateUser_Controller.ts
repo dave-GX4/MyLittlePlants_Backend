@@ -17,7 +17,8 @@ export class CreateUserController {
             name: !name,
             email: !email,
             password: !password
-          }
+          },
+          success: false
         });
         return;
       }

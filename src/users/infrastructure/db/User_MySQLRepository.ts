@@ -23,13 +23,14 @@ export class UserMySQLRepository implements UserRepository {
         });
 
         await connection.execute(
-            `INSERT INTO users (name, email, password, phone) 
-            VALUES (?, ?, ?, ?)`,
+            `INSERT INTO users (name, email, password, phone, admins) 
+            VALUES (?, ?, ?, ?, ?)`,
             [
                 user.name.value,
                 user.email.value,
                 user.password.value,
                 user.phone?.value ?? null,
+                user.admins
             ]
         );
         console.log('User inserted successfully in database');
@@ -84,13 +85,15 @@ export class UserMySQLRepository implements UserRepository {
       }
       
       const userData = rows[0];
-      return new User(
+      const user = new User(
         new NameValue(userData.name),
         new EmailValue(userData.email),
         new PasswordValue(userData.password),
         userData.phone ? new PhoneValue(userData.phone) : undefined,
-        userData.id // Asegúrate de que tu entidad User acepta el ID en el constructor
+        userData.id
       );
+      user.admins = Boolean(userData.admins);
+      return user
     } catch (error) {
       console.error("Error fetching user from MySQL:", error);
       // Relanza el error si ya es un NotFoundError
@@ -107,14 +110,19 @@ export class UserMySQLRepository implements UserRepository {
         `SELECT * FROM users`
       );
 
-      return rows.map((userData: any) => 
-        new User(
-          new NameValue(userData.name),
-          new EmailValue(userData.email),
-          new PasswordValue(userData.password),
-          userData.phone ? new PhoneValue(userData.phone) : undefined
-        )
-      );
+      return rows.map((userData: any) => {
+            const user = new User(
+                new NameValue(userData.name),
+                new EmailValue(userData.email),
+                new PasswordValue(userData.password),
+                userData.phone ? new PhoneValue(userData.phone) : undefined,
+                userData.id
+            );
+
+            user.admins = Boolean(userData.admins);
+
+            return user;
+      });
     } catch (error) {
       console.error("Error fetching users from MySQL:", error);
       throw new Error("Failed to fetch users from database");

@@ -24,8 +24,10 @@ export class CreateUserUseCase {
                 new NameValue(name),
                 new EmailValue(email),
                 hashedPasswordValue,
-                phone ? new PhoneValue(phone) : undefined
+                phone ? new PhoneValue(phone) : undefined,
             );
+
+            user.admins = false;
 
             await this.repository.create(user);
             console.log('User created in repository successfully');

@@ -27,7 +27,7 @@ export class PlantMySQLRepository implements PlantRepository {
           console.log('plantilla de planta:', {
             name: plant.name.value,
             description: plant.description.value,
-            imageUrl: plant.imageUrl.value,
+            imageUrl: plant.imageUrl,
             wateringFrequency: plant.wateringFrequency.value,
             sunlightRequirement: plant.sunlightRequirement.value,
             fertilizationFrequency: plant.fertilizationFrequency.value,

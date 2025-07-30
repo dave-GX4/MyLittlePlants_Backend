@@ -17,6 +17,7 @@ export class FinedByEmailUseCase {
             user.id!,
             user.name.value,
             user.email.value,
+            user.admins,
             user.phone?.value
         );
     }

@@ -17,7 +17,7 @@ export class Plant {
     description: DescriptionValue;
     imageUrl: ImageUrlValue;
     wateringFrequency: WateringFrequencyValue; // in days
-    sunlightRequirement: SunlightRequirementValue; // e.g., "Full Sun", "Partial Shade"
+    sunlightRequirement: SunlightRequirementValue; // e.g., " ", "Partial Shade"
     fertilizationFrequency: FertilizationFrequencyValue; // in weeks
     temperatureRange: TemperatureRangeValue; // e.g., "15-25°C"
     humidityRequirement: HumidityRequirementValue; // e.g., "40-60%"

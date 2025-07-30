@@ -9,6 +9,7 @@ export class User {
     email: EmailValue;
     password: PasswordValue;
     phone?: PhoneValue;
+    admins: boolean | undefined
 
     constructor(name: NameValue, email: EmailValue, password: PasswordValue, phone?: PhoneValue, id?: number) {
         this.id = id;
@@ -16,5 +17,6 @@ export class User {
         this.email = email;
         this.password = password;
         this.phone = phone;
+        this.admins = false;
     }
 }
