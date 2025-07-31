@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { NotFoundError } from "../../dominio/valueObject/NotFoundError";
+import { NotFoundError } from "../../dominio/entities/valueObject/NotFoundError";
 import { GetByIdUseCase } from '../../application/GetById_UseCase';
 
 export class GetByIdController {
