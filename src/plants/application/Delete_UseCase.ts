@@ -1,5 +1,5 @@
 import { PlantRepository } from "../dominio/Plant_Repository";
-import { NotFoundError } from "../dominio/valueObject/NotFoundError";
+import { NotFoundError } from "../dominio/entities/valueObject/NotFoundError";
 
 export class DeletePlantUseCase {
     constructor(private readonly repository: PlantRepository) {}

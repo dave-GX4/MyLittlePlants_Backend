@@ -1,15 +1,15 @@
-import { DescriptionValue } from "../valueObject/Description_Value";
-import { FertilizationFrequencyValue } from "../valueObject/Fertilization_Value";
-import { HeightValue } from "../valueObject/Height_Value";
-import { HumidityRequirementValue } from "../valueObject/Humidity_Value";
-import { ImageUrlValue } from "../valueObject/ImageUrl_Value";
-import { NameValue } from "../valueObject/Name_Value";
-import { PriceValue } from "../valueObject/Price_Value";
-import { SoilTypeValue } from "../valueObject/Soil_Value";
-import { SunlightRequirementValue } from "../valueObject/Sunlight_Value";
-import { TemperatureRangeValue } from "../valueObject/Temperature_Value";
-import { ToxicityLevel } from "../valueObject/Toxocity_Value";
-import { WateringFrequencyValue } from "../valueObject/Watering_Value";
+import { DescriptionValue } from "./valueObject/Description_Value";
+import { FertilizationFrequencyValue } from "./valueObject/Fertilization_Value";
+import { HeightValue } from "./valueObject/Height_Value";
+import { HumidityRequirementValue } from "./valueObject/Humidity_Value";
+import { ImageUrlValue } from "./valueObject/ImageUrl_Value";
+import { NameValue } from "./valueObject/Name_Value";
+import { PriceValue } from "./valueObject/Price_Value";
+import { SoilTypeValue } from "./valueObject/Soil_Value";
+import { SunlightRequirementValue } from "./valueObject/Sunlight_Value";
+import { TemperatureRangeValue } from "./valueObject/Temperature_Value";
+import { ToxicityLevel } from "./valueObject/Toxocity_Value";
+import { WateringFrequencyValue } from "./valueObject/Watering_Value";
 
 export class Plant {
     id?: number;

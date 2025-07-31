@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import userRouter from './src/users/infrastructure/Routers';
 import plantRouter from './src/plants/interfasces/Routers';
 import cartRouter from './src/cart/interfasces/Routers';
@@ -7,6 +8,8 @@ import { MySQLClient } from './src/core/db_MySQL';
 
 const app = express();
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Registrar rutas
 app.use('/api/v1', userRouter);

@@ -6,11 +6,20 @@ export class AddPlantController {
 
   async run(req: Request, res: Response): Promise<void> {
     try {
+      if (!req.file) {
+        console.log('❌ No se recibió ninguna imagen.');
+        res.status(400).json({ error: 'La imagen de la planta es un campo requerido.' });
+        return;
+      }
+
+      const imageUrl = req.file.path;
+
       console.log('📝 Received request body:', req.body);
+      console.log('🖼️ Received file info:', req.file);
+
       const { 
         name, 
         description, 
-        imageUrl, 
         wateringFrequency, 
         sunlightRequirement,
         fertilizationFrequency,  
@@ -22,20 +31,12 @@ export class AddPlantController {
         height,
       } = req.body;
 
-      if (!name || !description || !imageUrl || !wateringFrequency ||
+      if (!name || !description || !wateringFrequency ||
           !sunlightRequirement || !fertilizationFrequency ||
           !temperatureRange || !humidityRequirement || !soilType || !toxicityLevel ||
-          !price || !height) {
-        console.log('❌ los campos requeridos faltan');
-        res.status(400).json({ 
-          error: 'Campos requeridos faltan',
-          missing: {
-            name: !name,
-            description: !description,
-            imageUrl: !imageUrl,
-            wateringFrequency: !wateringFrequency,
-          }
-        });
+          price === undefined  || height === undefined) {
+        console.log('Campos requeridos faltan');
+        res.status(400).json({ error: 'Faltan campos de texto requeridos en el cuerpo de la petición.' });
         return;
       }
 
@@ -50,13 +51,14 @@ export class AddPlantController {
         humidityRequirement,
         soilType,
         toxicityLevel,
-        price,
-        height,
+        Number(price),
+        Number(height),
       )
-      console.log('✅ Planta creado con éxito');
+      console.log('Planta creado con éxito');
+      
       res.status(201).json({ message: 'exitoso' });
     } catch (error) {
-      console.error('❌ Error en el controlador:', error);
+      console.error('Error en el controlador:', error);
       res.status(500).json({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'

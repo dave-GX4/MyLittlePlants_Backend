@@ -1,19 +1,19 @@
 import { MySQLClient } from "../../../core/db_MySQL";
 import { Plant } from "../../dominio/entities/Plant";
 import { PlantRepository } from "../../dominio/Plant_Repository";
-import { DescriptionValue } from "../../dominio/valueObject/Description_Value";
-import { FertilizationFrequencyValue } from "../../dominio/valueObject/Fertilization_Value";
-import { HeightValue } from "../../dominio/valueObject/Height_Value";
-import { HumidityRequirementValue } from "../../dominio/valueObject/Humidity_Value";
-import { ImageUrlValue } from "../../dominio/valueObject/ImageUrl_Value";
-import { NameValue } from "../../dominio/valueObject/Name_Value";
-import { NotFoundError } from "../../dominio/valueObject/NotFoundError";
-import { PriceValue } from "../../dominio/valueObject/Price_Value";
-import { SoilTypeValue } from "../../dominio/valueObject/Soil_Value";
-import { SunlightRequirementValue } from "../../dominio/valueObject/Sunlight_Value";
-import { TemperatureRangeValue } from "../../dominio/valueObject/Temperature_Value";
-import { ToxicityLevel } from "../../dominio/valueObject/Toxocity_Value";
-import { WateringFrequencyValue } from "../../dominio/valueObject/Watering_Value";
+import { DescriptionValue } from "../../dominio/entities/valueObject/Description_Value";
+import { FertilizationFrequencyValue } from "../../dominio/entities/valueObject/Fertilization_Value";
+import { HeightValue } from "../../dominio/entities/valueObject/Height_Value";
+import { HumidityRequirementValue } from "../../dominio/entities/valueObject/Humidity_Value";
+import { ImageUrlValue } from "../../dominio/entities/valueObject/ImageUrl_Value";
+import { NameValue } from "../../dominio/entities/valueObject/Name_Value";
+import { NotFoundError } from "../../dominio/entities/valueObject/NotFoundError";
+import { PriceValue } from "../../dominio/entities/valueObject/Price_Value";
+import { SoilTypeValue } from "../../dominio/entities/valueObject/Soil_Value";
+import { SunlightRequirementValue } from "../../dominio/entities/valueObject/Sunlight_Value";
+import { TemperatureRangeValue } from "../../dominio/entities/valueObject/Temperature_Value";
+import { ToxicityLevel } from "../../dominio/entities/valueObject/Toxocity_Value";
+import { WateringFrequencyValue } from "../../dominio/entities/valueObject/Watering_Value";
 
 export class PlantMySQLRepository implements PlantRepository {
   private async getConnection() {

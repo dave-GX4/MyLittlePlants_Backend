@@ -1,18 +1,18 @@
 import { Plant } from "../dominio/entities/Plant";
 import { PlantRepository } from "../dominio/Plant_Repository";
-import { NameValue } from "../dominio/valueObject/Name_Value";
-import { DescriptionValue } from "../dominio/valueObject/Description_Value";
-import { ImageUrlValue } from "../dominio/valueObject/ImageUrl_Value";
-import { NotFoundError } from "../dominio/valueObject/NotFoundError";
-import { WateringFrequencyValue } from "../dominio/valueObject/Watering_Value";
-import { SunlightRequirementValue } from "../dominio/valueObject/Sunlight_Value";
-import { FertilizationFrequencyValue } from "../dominio/valueObject/Fertilization_Value";
-import { TemperatureRangeValue } from "../dominio/valueObject/Temperature_Value";
-import { HumidityRequirementValue } from "../dominio/valueObject/Humidity_Value";
-import { SoilTypeValue } from "../dominio/valueObject/Soil_Value";
-import { ToxicityLevel } from "../dominio/valueObject/Toxocity_Value";
-import { PriceValue } from "../dominio/valueObject/Price_Value";
-import { HeightValue } from "../dominio/valueObject/Height_Value";
+import { NameValue } from "../dominio/entities/valueObject/Name_Value";
+import { DescriptionValue } from "../dominio/entities/valueObject/Description_Value";
+import { ImageUrlValue } from "../dominio/entities/valueObject/ImageUrl_Value";
+import { NotFoundError } from "../dominio/entities/valueObject/NotFoundError";
+import { WateringFrequencyValue } from "../dominio/entities/valueObject/Watering_Value";
+import { SunlightRequirementValue } from "../dominio/entities/valueObject/Sunlight_Value";
+import { FertilizationFrequencyValue } from "../dominio/entities/valueObject/Fertilization_Value";
+import { TemperatureRangeValue } from "../dominio/entities/valueObject/Temperature_Value";
+import { HumidityRequirementValue } from "../dominio/entities/valueObject/Humidity_Value";
+import { SoilTypeValue } from "../dominio/entities/valueObject/Soil_Value";
+import { ToxicityLevel } from "../dominio/entities/valueObject/Toxocity_Value";
+import { PriceValue } from "../dominio/entities/valueObject/Price_Value";
+import { HeightValue } from "../dominio/entities/valueObject/Height_Value";
 
 export class UpdatePlantUseCase {
     constructor(private readonly repository: PlantRepository) {}

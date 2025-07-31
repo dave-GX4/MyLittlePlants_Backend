@@ -1,14 +1,16 @@
 import { Request, Response } from 'express';
-import { NotFoundError } from '../../dominio/valueObject/NotFoundError';
+import { NotFoundError } from '../../dominio/entities/valueObject/NotFoundError';
 import { UpdatePlantUseCase } from '../../application/Update_UseCase';
 
 export class UpdatePlantController {
-  constructor(private readonly updateUserUseCase: UpdatePlantUseCase) {}
+  constructor(private readonly updatePlantUseCase: UpdatePlantUseCase) {}
 
   async run(req: Request, res: Response): Promise<void> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+
+      console.log('📝 Received request body for update:', req.body);
 
       if (isNaN(id)) {
         res.status(400).json({
@@ -16,6 +18,11 @@ export class UpdatePlantController {
           error: 'ID de planta no válido'
         });
         return;
+      }
+      
+      if (req.file) {
+        console.log('🖼️ Received new file for update:', req.file);
+        updates.imageUrl = req.file.path;
       }
 
       // Verificar si hay campos para actualizar
@@ -27,7 +34,7 @@ export class UpdatePlantController {
         return;
       }
 
-      await this.updateUserUseCase.run(id, updates);
+      await this.updatePlantUseCase.run(id, updates);
 
       res.status(200).json({
         success: true,

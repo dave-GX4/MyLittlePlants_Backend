@@ -1,6 +1,6 @@
 import { Plant } from "../dominio/entities/Plant";
 import { PlantRepository } from "../dominio/Plant_Repository";
-import { NotFoundError } from "../dominio/valueObject/NotFoundError";
+import { NotFoundError } from "../dominio/entities/valueObject/NotFoundError";
 
 export class GetByIdUseCase {
     constructor(private readonly repository: PlantRepository) {}
