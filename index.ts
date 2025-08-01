@@ -4,7 +4,9 @@ import userRouter from './src/users/infrastructure/Routers';
 import plantRouter from './src/plants/interfasces/Routers';
 import cartRouter from './src/cart/interfasces/Routers';
 import { MySQLClient } from './src/core/db_MySQL';
+import dotenv from 'dotenv';
 
+dotenv.config();
 
 const app = express();
 app.use(express.json());

@@ -10,4 +10,5 @@ export interface UserRepository {
     delete(id: number): Promise<void>;
     update(id: number, user: User): Promise<void>;
     updateRole(id: number, role: RoleValue): Promise<void>;
+    updateSellerRequestStatus(id: number, status: boolean): Promise<void>;
 }

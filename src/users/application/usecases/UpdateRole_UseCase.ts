@@ -8,11 +8,18 @@ export class UpdateUserRoleUseCase {
     async run(id: number, newRole: string): Promise<void> {
         const userExists = await this.repository.getById(id);
         if (!userExists) {
-            throw new NotFoundError(`El usuario con el id ${id} no ha sido encontrado para actualizar su rol.`);
+            throw new NotFoundError(`El usuario con el id ${id} no ha sido encontrado.`);
         }
 
         const validRole = new RoleValue(newRole);
 
+        // Llamamos al método que cambia el rol.
         await this.repository.updateRole(id, validRole);
+
+        // Si el nuevo rol es 'Vendedor', asumimos que la solicitud ha sido procesada.
+        // Y actualizamos el estado de la solicitud a 'false'.
+        if (newRole === 'Vendedor') {
+            await this.repository.updateSellerRequestStatus(id, false);
+        }
     }
 }

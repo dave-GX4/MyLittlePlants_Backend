@@ -206,4 +206,16 @@ export class UserMySQLRepository implements UserRepository {
         throw new Error("Failed to update user role in database");
     }
   }
+
+  async updateSellerRequestStatus(id: number, status: boolean): Promise<void> {
+    const connection = await this.getConnection();
+    try {
+        const sql = "UPDATE users SET wantsToBeSeller = ? WHERE id = ?";
+        const params = [status, id];
+        await connection.execute(sql, params);
+    } catch (error) {
+        console.error(`Error updating seller request status for user ID: ${id}`, error);
+        throw new Error("Failed to update seller request status in database");
+    }
+  }
 }

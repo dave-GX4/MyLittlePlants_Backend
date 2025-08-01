@@ -9,6 +9,7 @@ import { UpdateUserUseCase } from "../application/usecases/UpdateUser_UseCase";
 import { FinedByEmailUseCase } from "../application/usecases/FinedByEmail_UseCase";
 import { UpdateUserRoleUseCase } from "../application/usecases/UpdateRole_UseCase";
 import { GetSellerRequestsUseCase } from "../application/usecases/GetSellerReques_UseCase";
+import { LoginUseCase } from "../application/usecases/Login_UseCase";
 
 import { CreateUserController } from './controllers/CreateUser_Controller';
 import { GetByIdController } from './controllers/GetById_Controller';
@@ -18,6 +19,7 @@ import { DeleteUserController } from './controllers/DeleteUser_Controller';
 import { FinedByEmailController } from "./controllers/FinedByEmail_Controller";
 import { UpdateUserRoleController } from "./controllers/UpdateRole_Controller";
 import { GetSellerRequestsController } from "./controllers/GetSellerRequest_Controller";
+import { LoginController } from "./controllers/Login_Controller";
 
 // Incriptacion servicio
 const passwordHashService = new PasswordHashService();
@@ -34,6 +36,7 @@ const deleteUserUseCase = new DeleteUserUseCase(userRepository);
 const finedByEmailUsecase = new FinedByEmailUseCase(userRepository);
 const updateRoleUsecase = new UpdateUserRoleUseCase(userRepository)
 const getSellerRequestsUseCase = new GetSellerRequestsUseCase(userRepository);
+const loginUseCase = new LoginUseCase(userRepository, passwordHashService)
 
 // Controllers
 export const createUserController = new CreateUserController(createUserUseCase);
@@ -44,3 +47,4 @@ export const deleteUserController = new DeleteUserController(deleteUserUseCase);
 export const finedByEmailController = new FinedByEmailController(finedByEmailUsecase)
 export const updateRoleController = new UpdateUserRoleController(updateRoleUsecase)
 export const getSellerRequestsController = new GetSellerRequestsController(getSellerRequestsUseCase);
+export const loginController = new LoginController(loginUseCase)
