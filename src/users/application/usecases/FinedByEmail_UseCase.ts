@@ -1,24 +1,26 @@
+import { NotFoundError } from "../../../plants/dominio/entities/valueObject/NotFoundError";
 import { UserRepository } from "../../domain/User_Repository";
 import { UserResponse } from "../DTOs/User_DTO";
 
 export class FinedByEmailUseCase {
     constructor(private readonly repository: UserRepository) {}
 
-    async run(email: string): Promise<UserResponse | null> {
+    async run(email: string): Promise<UserResponse> {
         const user = await this.repository.finedByEmail(email);
 
         if (!user) {
-            console.warn(`User with email ${email} not found`);
-            return null;
+            throw new NotFoundError(`User with email ${email} not found`);
         }
 
-        // Convertimos la entidad User al DTO de respuesta
-        return new UserResponse(
-            user.id!,
-            user.name.value,
-            user.email.value,
-            user.admins,
-            user.phone?.value
-        );
+        const userResponse: UserResponse = {
+            id: user.id!,
+            name: user.name.value,
+            email: user.email.value,
+            role: user.role.value,
+            wantsToBeSeller: user.wantsToBeSeller,
+            phone: user.phone?.value
+        };
+
+        return userResponse;
     }
 }

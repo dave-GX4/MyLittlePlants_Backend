@@ -13,39 +13,33 @@ export class UpdateUserUseCase {
         private readonly passwordHashService: IPasswordHashService
     ) {}
 
-    async run(id: number, updates: Partial<{
+async run(id: number, updates: Partial<{
         name: string;
         email: string;
         phone: string;
         password: string;
     }>): Promise<void> {
+        
         const existingUser = await this.repository.getById(id);
         if (!existingUser) {
             throw new NotFoundError(`El usuario con el id ${id} no ha sido encontrado`);
         }
 
-        // Manejar la actualización de contraseña si se proporciona
-        let updatedPasswordValue = existingUser.password;
-        if (updates.password) {
-            // Validar la nueva contraseña creando un PasswordValue temporal
-            new PasswordValue(updates.password);
-            
-            // Hashear la nueva contraseña
-            const hashedPassword = await this.passwordHashService.hash(updates.password);
-            updatedPasswordValue = PasswordValue.fromHashed(hashedPassword);
-        }
+        const passwordValue = updates.password 
+            ? new PasswordValue(await this.passwordHashService.hash(updates.password)) 
+            : existingUser.password;
 
-        // Crear un nuevo usuario con los campos actualizados
+        // 'existingUser.wantsToBeSeller' en la posición correcta.
         const updatedUser = new User(
             updates.name ? new NameValue(updates.name) : existingUser.name,
             updates.email ? new EmailValue(updates.email) : existingUser.email,
-            updatedPasswordValue,
-            updates.phone !== undefined ? 
-                (updates.phone ? new PhoneValue(updates.phone) : undefined) 
-                : existingUser.phone,
+            passwordValue,
+            existingUser.role,
+            existingUser.wantsToBeSeller, // Mantenemos la solicitud existente
+            updates.phone !== undefined ? new PhoneValue(updates.phone) : existingUser.phone,
             id
         );
 
-        return this.repository.update(updatedUser);
+        await this.repository.update(id, updatedUser);
     }
 }

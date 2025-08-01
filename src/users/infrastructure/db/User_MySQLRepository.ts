@@ -2,68 +2,60 @@ import { MySQLClient } from "../../../core/db_MySQL";
 import { User } from "../../domain/entities/User";
 import { EmailValue } from "../../domain/entities/objectValues/Email_Value";
 import { NameValue } from "../../domain/entities/objectValues/Name_Value";
-import { NotFoundError } from "../../domain/entities/objectValues/NotFoundError";
 import { PasswordValue } from "../../domain/entities/objectValues/Password_Value";
 import { PhoneValue } from "../../domain/entities/objectValues/Phone_Value";
 import { UserRepository } from "../../domain/User_Repository";
+import { RoleValue } from "../../domain/entities/objectValues/Role_Value";
 
 export class UserMySQLRepository implements UserRepository {
   private async getConnection() {
     return await MySQLClient.getInstance();
   }
 
+  // CREATE
   async create(user: User): Promise<void> {
     const connection = await this.getConnection();
-      
     try {
-        console.log('Attempting to create user in database:', {
-            name: user.name.value,
-            email: user.email.value,
-            hasPhone: !!user.phone
-        });
-
         await connection.execute(
-            `INSERT INTO users (name, email, password, phone, admins) 
-            VALUES (?, ?, ?, ?, ?)`,
+            `INSERT INTO users (name, email, password, role, wantsToBeSeller, phone) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 user.name.value,
                 user.email.value,
                 user.password.value,
+                user.role.value,
+                user.wantsToBeSeller,
                 user.phone?.value ?? null,
-                user.admins
             ]
         );
-        console.log('User inserted successfully in database');
     } catch (error) {
         console.error("Error creating user in MySQL:", error);
-        if (error instanceof Error) {
-            throw new Error(`Database error: ${error.message}`);
-        }
         throw new Error("Failed to create user in database");
     }
   }
 
+  // FIND BY EMAIL
   async finedByEmail(email: string): Promise<User | null> {
-      const connection = this.getConnection();
-      
-      const conn = await connection;
+    const connection = await this.getConnection();
     try {
-      const [rows]: any = await conn.execute(
+      const [rows]: any = await connection.execute(
         `SELECT * FROM users WHERE email = ?`,
         [email]
       );
 
       if (rows.length === 0) {
-        return null; // No user found with the given email
+        return null;
       }
 
       const userData = rows[0];
       return new User(
         new NameValue(userData.name),
         new EmailValue(userData.email),
-        new PasswordValue(userData.password),
+        PasswordValue.fromHashed(userData.password),
+        new RoleValue(userData.role),
+        userData.wantsToBeSeller, // <-- CAMBIO: Añadido el argumento que faltaba
         userData.phone ? new PhoneValue(userData.phone) : undefined,
-        userData.id // Asegúrate de que tu entidad User acepta el ID en el constructor
+        userData.id
       );
     } catch (error) {
       console.error("Error fetching user by email from MySQL:", error);
@@ -71,9 +63,9 @@ export class UserMySQLRepository implements UserRepository {
     }
   }
 
-  async getById(id: number): Promise<User> {
+  // GET BY ID (Corregido)
+  async getById(id: number): Promise<User | null> {
     const connection = await this.getConnection();
-    
     try {
       const [rows]: any = await connection.execute(
         `SELECT * FROM users WHERE id = ?`,
@@ -81,47 +73,43 @@ export class UserMySQLRepository implements UserRepository {
       );
 
       if (rows.length === 0) {
-        throw new NotFoundError(`User with id ${id} not found in database`);
+        return null;
       }
       
       const userData = rows[0];
-      const user = new User(
+      return new User(
         new NameValue(userData.name),
         new EmailValue(userData.email),
-        new PasswordValue(userData.password),
+        PasswordValue.fromHashed(userData.password),
+        new RoleValue(userData.role),
+        userData.wantsToBeSeller, // <-- CAMBIO: Añadido el argumento que faltaba
         userData.phone ? new PhoneValue(userData.phone) : undefined,
         userData.id
       );
-      user.admins = Boolean(userData.admins);
-      return user
     } catch (error) {
       console.error("Error fetching user from MySQL:", error);
-      // Relanza el error si ya es un NotFoundError
-      if (error instanceof NotFoundError) throw error;
       throw new Error("Failed to fetch user from database");
     }
   }
 
+  // GET ALL (Corregido)
   async getAll(): Promise<User[]> {
     const connection = await this.getConnection();
-    
     try {
       const [rows]: any = await connection.execute(
         `SELECT * FROM users`
       );
 
       return rows.map((userData: any) => {
-            const user = new User(
-                new NameValue(userData.name),
-                new EmailValue(userData.email),
-                new PasswordValue(userData.password),
-                userData.phone ? new PhoneValue(userData.phone) : undefined,
-                userData.id
-            );
-
-            user.admins = Boolean(userData.admins);
-
-            return user;
+        return new User(
+            new NameValue(userData.name),
+            new EmailValue(userData.email),
+            PasswordValue.fromHashed(userData.password),
+            new RoleValue(userData.role),
+            userData.wantsToBeSeller, // <-- CAMBIO: Añadido el argumento que faltaba
+            userData.phone ? new PhoneValue(userData.phone) : undefined,
+            userData.id
+        );
       });
     } catch (error) {
       console.error("Error fetching users from MySQL:", error);
@@ -129,9 +117,38 @@ export class UserMySQLRepository implements UserRepository {
     }
   }
 
+  async getSellerRequests(): Promise<User[]> {
+    const connection = await this.getConnection();
+
+    try {
+        // La consulta SQL filtra por dos condiciones:
+        // 1. El usuario QUIERE ser vendedor (wantsToBeSeller = TRUE)
+        // 2. El usuario TODAVÍA no ha sido aprobado (role = 'Usuario')
+        const sql = "SELECT * FROM users WHERE wantsToBeSeller = TRUE AND role = 'Usuario'";
+        
+        const [rows]: any = await connection.execute(sql);
+
+        return rows.map((userData: any) => {
+            return new User(
+                new NameValue(userData.name),
+                new EmailValue(userData.email),
+                PasswordValue.fromHashed(userData.password),
+                new RoleValue(userData.role),
+                userData.wantsToBeSeller,
+                userData.phone ? new PhoneValue(userData.phone) : undefined,
+                userData.id
+            );
+        });
+
+    } catch (error) {
+        console.error("Error fetching seller requests from MySQL:", error);
+        throw new Error("Failed to fetch seller requests from database");
+    }
+  }
+
+  // DELETE
   async delete(id: number): Promise<void> {
     const connection = await this.getConnection();
-    
     try {
       await connection.execute(
         `DELETE FROM users WHERE id = ?`,
@@ -143,44 +160,50 @@ export class UserMySQLRepository implements UserRepository {
     }
   }
 
-  async update(user: User): Promise<void> {
-      if (!user.id) throw new Error("User ID is required for update");
+  // UPDATE
+  async update(id: number, user: User): Promise<void> {
+    const connection = await this.getConnection();
+    try {
+      const query = `
+        UPDATE users SET 
+          name = ?,
+          email = ?,
+          password = ?,
+          phone = ?
+        WHERE id = ?
+      `;
       
-      const connection = await this.getConnection();
-      
-      try {
-        // Construir la consulta SQL dinámicamente
-        const updateFields: string[] = [];
-        const values: any[] = [];
+      const values = [
+        user.name.value,
+        user.email.value,
+        user.password.value,
+        user.phone?.value ?? null,
+        id
+      ];
 
-        if (user.name) {
-          updateFields.push('name = ?');
-          values.push(user.name.value);
+      await connection.execute(query, values);
+    } catch (error) {
+      console.error("Error updating user in MySQL:", error);
+      throw new Error("Failed to update user in database");
+    }
+  }
+
+  // UPDATE ROLE
+  async updateRole(id: number, role: RoleValue): Promise<void> {
+    const connection = await this.getConnection();
+    try {
+        const sql = "UPDATE users SET role = ? WHERE id = ?";
+        const params = [role.value, id];
+
+        const [result]: any = await connection.execute(sql, params);
+
+        if (result.affectedRows === 0) {
+            // Este error será capturado por el caso de uso y convertido en un NotFoundError
+            throw new Error(`User with ID ${id} not found.`); 
         }
-        if (user.email) {
-          updateFields.push('email = ?');
-          values.push(user.email.value);
-        }
-        if (user.password) {
-          updateFields.push('password = ?');
-          values.push(user.password.value);
-        }
-        // El teléfono puede ser null
-        updateFields.push('phone = ?');
-        values.push(user.phone?.value ?? null);
-
-        // Agregar el ID al final del array de valores
-        values.push(user.id);
-
-        const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
-        
-        console.log('Executing update query:', query);
-        console.log('With values:', values);
-
-        await connection.execute(query, values);
-      } catch (error) {
-        console.error("Error updating user in MySQL:", error);
-        throw new Error("Failed to update user in database");
-      }
+    } catch (error) {
+        console.error(`Error updating role for user ID: ${id} in MySQL:`, error);
+        throw new Error("Failed to update user role in database");
+    }
   }
 }
