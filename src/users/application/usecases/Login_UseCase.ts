@@ -1,5 +1,3 @@
-// users/application/usecases/Login_UseCase.ts
-
 import { UserRepository } from "../../domain/User_Repository";
 import { IPasswordHashService } from "../../domain/service/PasswordHashService";
 import { UserResponse } from "../DTOs/User_DTO";
@@ -51,7 +49,7 @@ export class LoginUseCase {
             name: user.name.value,
             email: user.email.value,
             role: user.role.value,
-            wantsToBeSeller: user.wantsToBeSeller,
+            wantsToBeSeller: Boolean(user.wantsToBeSeller),
             phone: user.phone?.value
         };
 
