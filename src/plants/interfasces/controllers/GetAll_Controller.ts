@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { GetAllUseCase } from '../../application/GetAll_UseCase';
 
-
 export class GetAllController {
-  constructor(private getAllUseCase: GetAllUseCase) {}
+  constructor(private readonly getAllUseCase: GetAllUseCase) {}
 
   async run(req: Request, res: Response): Promise<void> {
     try {

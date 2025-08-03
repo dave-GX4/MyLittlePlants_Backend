@@ -11,15 +11,26 @@ export interface AuthenticatedRequest extends Request {
  */
 export const isAuthenticated = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+        let token: string | undefined;
+        
+        // Primero, busca en el header (el método estándar)
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
 
+        // Si no lo encontró en el header, busca en el body
+        if (!token && req.body && req.body.token) {
+            token = req.body.token;
+        }
+
+        // El resto de la lógica es la misma
         if (!token) {
             res.status(401).json({ error: 'Acceso denegado. Se requiere un token.' });
             return;
         }
 
-        const secretKey = process.env.JWT_SECRET!; // Verifica que existe
+        const secretKey = process.env.JWT_SECRET!;
         const decodedPayload = jwt.verify(token, secretKey);
         req.user = decodedPayload as any;
 

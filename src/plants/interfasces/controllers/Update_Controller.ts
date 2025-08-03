@@ -7,6 +7,13 @@ export class UpdatePlantController {
 
   async run(req: Request, res: Response): Promise<void> {
     try {
+      const user = (req as any).user;
+      if (!user || !user.id || user.role !== 'Vendedor') {
+        res.status(403).json({ success: false, error: 'Acceso denegado.' });
+        return;
+      }
+      const sellerId = user.id;
+
       const id = parseInt(req.params.id);
       const updates = req.body;
 
@@ -34,7 +41,7 @@ export class UpdatePlantController {
         return;
       }
 
-      await this.updatePlantUseCase.run(id, updates);
+      await this.updatePlantUseCase.run(id, sellerId, updates);
 
       res.status(200).json({
         success: true,

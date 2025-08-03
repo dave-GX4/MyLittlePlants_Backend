@@ -6,6 +6,17 @@ export class AddPlantController {
 
   async run(req: Request, res: Response): Promise<void> {
     try {
+      const user = (req as any).user;
+
+      // Verificación de seguridad: ¿hay un usuario autenticado? ¿Tiene el rol de vendedor?
+      if (!user || !user.id || user.role !== 'Vendedor') {
+        console.log('❌ Acceso no autorizado o rol incorrecto.');
+        res.status(403).json({ error: 'Acceso denegado. Se requiere rol de vendedor.' });
+        return;
+      }
+
+      const sellerId = user.id;
+
       if (!req.file) {
         console.log('❌ No se recibió ninguna imagen.');
         res.status(400).json({ error: 'La imagen de la planta es un campo requerido.' });
@@ -53,6 +64,7 @@ export class AddPlantController {
         toxicityLevel,
         Number(price),
         Number(height),
+        sellerId
       )
       console.log('Planta creado con éxito');
       

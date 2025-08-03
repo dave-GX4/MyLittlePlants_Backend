@@ -35,12 +35,25 @@ export class CreateUserController {
     } catch (error) {
       console.error('❌ Error in CreateUserController:', error);
       
-      // Capturará tanto errores del servidor
-      // como errores de validación de negocio (ej. rol inválido) del 'UseCase'.
-      res.status(error instanceof Error && error.message.includes("rol válido") ? 400 : 500)
-         .json({ 
-            error: 'Internal server error',
-            message: error instanceof Error ? error.message : 'Unknown error'
+      if (error instanceof Error) {
+        // Si el error es por correo duplicado, devolvemos 409 Conflict.
+        if (error.message === 'El correo electrónico ya está registrado.') {
+          res.status(409).json({ message: error.message, success: false });
+          return;
+        }
+        
+        // Si el error es por un rol inválido, devolvemos 400 Bad Request.
+        if (error.message.includes("rol válido")) {
+          res.status(400).json({ message: error.message, success: false });
+          return;
+        }
+      }
+      
+      // Para cualquier otro tipo de error, devolvemos 500 Internal Server Error.
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        success: false
       });
     }
   }

@@ -21,179 +21,181 @@ export class PlantMySQLRepository implements PlantRepository {
   }
 
   async addPlant(plant: Plant): Promise<void> {
-      const connection = await this.getConnection();
-        
-      try {
-          console.log('plantilla de planta:', {
-            name: plant.name.value,
-            description: plant.description.value,
-            imageUrl: plant.imageUrl,
-            wateringFrequency: plant.wateringFrequency.value,
-            sunlightRequirement: plant.sunlightRequirement.value,
-            fertilizationFrequency: plant.fertilizationFrequency.value,
-            temperatureRange: plant.temperatureRange.value,
-            humidityRequirement: plant.humidityRequirement.value,
-            soilType: plant.soilType.value,
-            toxicityLevel: plant.toxicityLevel.value,
-            price: plant.price.value,
-            height: plant.height.value,
-          });
-  
-          await connection.execute(
-              `INSERT INTO plants (name, description, imageUrl, wateringFrequency, sunlightRequirement, fertilizationFrequency, temperatureRange, humidityRequirement, soilType, toxicityLevel, price, height) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-              [
-                plant.name.value,
-                plant.description.value,
-                plant.imageUrl.value,
-                plant.wateringFrequency.value,
-                plant.sunlightRequirement.value,
-                plant.fertilizationFrequency.value,
-                plant.temperatureRange.value,
-                plant.humidityRequirement.value,
-                plant.soilType.value,
-                plant.toxicityLevel.value,
-                plant.price.value,
-                plant.height.value,
-              ]
-          );
-          console.log('La planta se creó correctamente en la base de datos');
-      } catch (error) {
-          console.error("Error al crear la planta en MySQL:", error);
-          if (error instanceof Error) {
-              throw new Error(`Database error: ${error.message}`);
-          }
-          throw new Error("Fallo al crear la planta en la database");
+    const connection = await this.getConnection();
+    try {
+      await connection.execute(
+        `INSERT INTO plants (
+          name, description, imageUrl, wateringFrequency, sunlightRequirement, 
+          fertilizationFrequency, temperatureRange, humidityRequirement, soilType, 
+          toxicityLevel, price, height, sellerId
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          plant.name.value,
+          plant.description.value,
+          plant.imageUrl.value,
+          plant.wateringFrequency.value,
+          plant.sunlightRequirement.value,
+          plant.fertilizationFrequency.value,
+          plant.temperatureRange.value,
+          plant.humidityRequirement.value,
+          plant.soilType.value,
+          plant.toxicityLevel.value,
+          plant.price.value,
+          plant.height.value,
+          plant.sellerId 
+        ]
+      );
+      console.log(`La planta se creó correctamente para el vendedor ${plant.sellerId}`);
+    } catch (error) {
+      console.error("Error al crear la planta en MySQL:", error);
+      if (error instanceof Error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+      throw new Error("Fallo al crear la planta en la base de datos");
+    } finally {
+      if (connection) {
+        connection.end();
       }
     }
+  }
 
-    async getById(id: number): Promise<Plant> {
-        const connection = await this.getConnection();
-        
-        try {
-          const [rows]: any = await connection.execute(
-            `SELECT * FROM plants WHERE id = ?`,
-            [id]
-          );
+  async getById(id: number): Promise<Plant> {
+    const connection = await this.getConnection();
     
-          if (rows.length === 0) {
-            throw new NotFoundError(`Planta con ID ${id} no encontrada`);
-          }
-          
-          const plantData = rows[0];
-          return new Plant(
-            new NameValue(plantData.name),
-            new DescriptionValue(plantData.description),
-            new ImageUrlValue(plantData.imageUrl),
-            new WateringFrequencyValue(plantData.wateringFrequency),
-            new SunlightRequirementValue(plantData.sunlightRequirement),
-            new FertilizationFrequencyValue(plantData.fertilizationFrequency),
-            new TemperatureRangeValue(plantData.temperatureRange),
-            new HumidityRequirementValue(plantData.humidityRequirement),
-            new SoilTypeValue(plantData.soilType),
-            new ToxicityLevel(plantData.toxicityLevel),
-            new PriceValue(plantData.price),
-            new HeightValue(plantData.height),
-            plantData.id
-          );
-        } catch (error) {
-          console.error("Error fetching plant from MySQL:", error);
-          // Relanza el error si ya es un NotFoundError
-          if (error instanceof NotFoundError) throw error;
-          throw new Error("Failed to fetch plant from database");
-        }
+    try {
+      const [rows]: any = await connection.execute(
+        `SELECT * FROM plants WHERE id = ?`,
+        [id]
+      );
+
+      if (rows.length === 0) {
+        throw new NotFoundError(`Planta con ID ${id} no encontrada`);
       }
+      
+      const plantData = rows[0];
+      return new Plant(
+        new NameValue(plantData.name),
+        new DescriptionValue(plantData.description),
+        new ImageUrlValue(plantData.imageUrl),
+        new WateringFrequencyValue(plantData.wateringFrequency),
+        new SunlightRequirementValue(plantData.sunlightRequirement),
+        new FertilizationFrequencyValue(plantData.fertilizationFrequency),
+        new TemperatureRangeValue(plantData.temperatureRange),
+        new HumidityRequirementValue(plantData.humidityRequirement),
+        new SoilTypeValue(plantData.soilType),
+        new ToxicityLevel(plantData.toxicityLevel),
+        new PriceValue(plantData.price),
+        new HeightValue(plantData.height),
+        plantData.id
+      );
+    } catch (error) {
+      console.error("Error fetching plant from MySQL:", error);
+      // Relanza el error si ya es un NotFoundError
+      if (error instanceof NotFoundError) throw error;
+      throw new Error("Failed to fetch plant from database");
+    }
+  }
     
-      async getAll(): Promise<Plant[]> {
-        const connection = await this.getConnection();
-        
-        try {
-          const [rows]: any = await connection.execute(
-            `SELECT * FROM plants`
-          );
+  async getAll(): Promise<Plant[]> {
+    const connection = await this.getConnection();
     
-          return rows.map((plantsData: any) => 
-            new Plant(
-                new NameValue(plantsData.name),
-                new DescriptionValue(plantsData.description),
-                new ImageUrlValue(plantsData.imageUrl),
-                new WateringFrequencyValue(plantsData.wateringFrequency),
-                new SunlightRequirementValue(plantsData.sunlightRequirement),
-                new FertilizationFrequencyValue(plantsData.fertilizationFrequency),
-                new TemperatureRangeValue(plantsData.temperatureRange),
-                new HumidityRequirementValue(plantsData.humidityRequirement),
-                new SoilTypeValue(plantsData.soilType),
-                new ToxicityLevel(plantsData.toxicityLevel),
-                new PriceValue(plantsData.price),
-                new HeightValue(plantsData.height),
-                plantsData.id
-            )
-          );
-        } catch (error) {
-          console.error("Error fetching plants from MySQL:", error);
-          throw new Error("Failed to fetch plants from database");
-        }
-      }
+    try {
+      const [rows]: any = await connection.execute(
+        `SELECT * FROM plants`
+      );
+
+      return rows.map((plantsData: any) => 
+        new Plant(
+          new NameValue(plantsData.name),
+          new DescriptionValue(plantsData.description),
+          new ImageUrlValue(plantsData.imageUrl),
+          new WateringFrequencyValue(plantsData.wateringFrequency),
+          new SunlightRequirementValue(plantsData.sunlightRequirement),
+          new FertilizationFrequencyValue(plantsData.fertilizationFrequency),
+          new TemperatureRangeValue(plantsData.temperatureRange),
+          new HumidityRequirementValue(plantsData.humidityRequirement),
+          new SoilTypeValue(plantsData.soilType),
+          new ToxicityLevel(plantsData.toxicityLevel),
+          new PriceValue(plantsData.price),
+          new HeightValue(plantsData.height),
+          plantsData.id
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching plants from MySQL:", error);
+      throw new Error("Failed to fetch plants from database");
+    }
+  }
     
-      async delete(id: number): Promise<void> {
-        const connection = await this.getConnection();
-        
-        try {
-          await connection.execute(
-            `DELETE FROM plants WHERE id = ?`,
-            [id]
-          );
-        } catch (error) {
-          console.error("Error deleting plant from MySQL:", error);
-          throw new Error("Failed to delete plant from database");
-        }
-      }
+  async delete(id: number): Promise<void> {
+    const connection = await this.getConnection();
+    
+    try {
+      await connection.execute(
+        `DELETE FROM plants WHERE id = ?`,
+        [id]
+      );
+    } catch (error) {
+      console.error("Error deleting plant from MySQL:", error);
+      throw new Error("Failed to delete plant from database");
+    }
+  }
     
   async update(plant: Plant): Promise<void> {
-    if (!plant.id) throw new Error("Planta id es requerido para actualizar");
+    if (!plant.id || !plant.sellerId) {
+      throw new Error("Tanto el ID de la planta como el ID del vendedor son requeridos para actualizar");
+    }
 
     const connection = await this.getConnection();
 
     try {
-        // Mapeo de propiedades a columnas
-        const fieldsMap: Record<string, any> = {
-            name: plant.name?.value,
-            description: plant.description?.value,
-            imageUrl: plant.imageUrl?.value,
-            wateringFrequency: plant.wateringFrequency?.value,
-            sunlightRequirement: plant.sunlightRequirement?.value,
-            fertilizationFrequency: plant.fertilizationFrequency?.value,
-            temperatureRange: plant.temperatureRange?.value,
-            humidityRequirement: plant.humidityRequirement?.value,
-            soilType: plant.soilType?.value,
-            toxicityLevel: plant.toxicityLevel?.value,
-            price: plant.price?.value,
-            height: plant.height?.value,
-        };
+      // Mapeo de propiedades a columnas
+      const fieldsMap: Record<string, any> = {
+        name: plant.name?.value,
+        description: plant.description?.value,
+        imageUrl: plant.imageUrl?.value,
+        wateringFrequency: plant.wateringFrequency?.value,
+        sunlightRequirement: plant.sunlightRequirement?.value,
+        fertilizationFrequency: plant.fertilizationFrequency?.value,
+        temperatureRange: plant.temperatureRange?.value,
+        humidityRequirement: plant.humidityRequirement?.value,
+        soilType: plant.soilType?.value,
+        toxicityLevel: plant.toxicityLevel?.value,
+        price: plant.price?.value,
+        height: plant.height?.value,
+      };
 
-        const updateFields: string[] = [];
-        const values: any[] = [];
+      const updateFields: string[] = [];
+      const values: any[] = [];
 
-        for (const [column, value] of Object.entries(fieldsMap)) {
-            if (value !== undefined && value !== null) {
-                updateFields.push(`${column} = ?`);
-                values.push(value);
-            }
+      for (const [column, value] of Object.entries(fieldsMap)) {
+        if (value !== undefined && value !== null) {
+          updateFields.push(`${column} = ?`);
+          values.push(value);
         }
+      }
 
-        if (updateFields.length === 0) {
-            throw new Error("No hay campos válidos para actualizar");
-        }
+      if (updateFields.length === 0) {
+        throw new Error("No hay campos válidos para actualizar");
+      }
 
-        values.push(plant.id); // Agrega ID al final
-        const query = `UPDATE plants SET ${updateFields.join(', ')} WHERE id = ?`;
+      values.push(plant.id);
+      values.push(plant.sellerId);
 
-        console.log('Executing update query:', query);
-        console.log('With values:', values);
+      const query = `UPDATE plants SET ${updateFields.join(', ')} WHERE id = ? AND sellerId = ?`;
 
-        await connection.execute(query, values);
+      const [result] = await connection.execute(query, values);
+
+      if ((result as any).affectedRows === 0) {
+        throw new Error("La planta no fue encontrada o no tienes permiso para actualizarla.");
+      }
+
+      await connection.execute(query, values);
     } catch (error) {
-        console.error("Error updating plant in MySQL:", error);
-        throw new Error("Failed to update plant in database");
+        console.error("Error al actualizar la planta en la db:", error);
+        throw new Error("Fallo al actualizar la planta en la base de datos");
+    } finally {
+        if (connection) connection.end();
     }
   }
 
@@ -240,4 +242,48 @@ export class PlantMySQLRepository implements PlantRepository {
     );
   }
 
+  async findBySellerId(sellerId: number): Promise<Plant[]> {
+    const connection = await this.getConnection();
+    try {
+      const sql = "SELECT * FROM plants WHERE sellerId = ?";
+
+      const [rows] = await connection.execute(sql, [sellerId]);
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        console.log(`No se encontraron plantas para el vendedor con ID: ${sellerId}`);
+        return [];
+      }
+
+      const plants = (rows as any[]).map(row => {
+        return new Plant(
+          new NameValue(row.name),
+          new DescriptionValue(row.description),
+          new ImageUrlValue(row.imageUrl),
+          new WateringFrequencyValue(row.wateringFrequency),
+          new SunlightRequirementValue(row.sunlightRequirement),
+          new FertilizationFrequencyValue(row.fertilizationFrequency),
+          new TemperatureRangeValue(row.temperatureRange),
+          new HumidityRequirementValue(row.humidityRequirement),
+          new SoilTypeValue(row.soilType),
+          new ToxicityLevel(row.toxicityLevel),
+          new PriceValue(row.price),
+          new HeightValue(row.height),
+          row.sellerId,
+          row.id
+        );
+      });
+      console.log(`Se encontraron ${plants.length} plantas para el vendedor con ID: ${sellerId}`);
+      return plants;
+    } catch (error) {
+      console.error(`Error al buscar plantas por sellerId (${sellerId}) en MySQL:`, error);
+      if (error instanceof Error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+      throw new Error("Fallo al buscar las plantas del vendedor en la base de datos");
+    } finally {
+      if (connection) {
+          connection.end();
+      }
+    }
+  }
 }

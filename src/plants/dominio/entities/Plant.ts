@@ -25,6 +25,7 @@ export class Plant {
     toxicityLevel: ToxicityLevel; // e.g., "Non-toxic", "Mildly Toxic", "Highly Toxic"
     price: PriceValue; // in local currency
     height: HeightValue; // in cm
+    sellerId: number;
 
     constructor(
         name: NameValue,
@@ -39,7 +40,9 @@ export class Plant {
         toxicityLevel: ToxicityLevel,
         price: PriceValue,
         height: HeightValue,
+        sellerId: number,
         id?: number
+    
     ) {
         this.id = id;
         this.name = name;
@@ -54,5 +57,6 @@ export class Plant {
         this.toxicityLevel = toxicityLevel;
         this.price = price;
         this.height = height;
+        this.sellerId = sellerId;
     }
 }

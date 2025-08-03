@@ -29,6 +29,7 @@ export class AddPlantUseCase {
         toxicityLevel: string,
         price: number,
         height: number,
+        sellerId: number
     ): Promise<void> {
         try {
             console.log('Creating user with data:', {name, description, imageUrl, wateringFrequency, sunlightRequirement, fertilizationFrequency, temperatureRange, humidityRequirement, soilType, toxicityLevel, price, height});
@@ -45,7 +46,8 @@ export class AddPlantUseCase {
                 new SoilTypeValue(soilType),
                 new ToxicityLevel(toxicityLevel),
                 new PriceValue(price),
-                new HeightValue(height)
+                new HeightValue(height),
+                sellerId
             );
 
             await this.repository.addPlant(plant);

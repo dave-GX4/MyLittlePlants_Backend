@@ -17,7 +17,7 @@ import { HeightValue } from "../dominio/entities/valueObject/Height_Value";
 export class UpdatePlantUseCase {
     constructor(private readonly repository: PlantRepository) {}
 
-    async run(id: number, updates: Partial<{
+    async run(id: number, sellerId: number, updates: Partial<{
         name: string;
         description: string;
         ImageUrl: string;
@@ -33,10 +33,13 @@ export class UpdatePlantUseCase {
     }>): Promise<void> {
         const existingPlant = await this.repository.getById(id);
         if (!existingPlant) {
-            throw new NotFoundError(`La planta con el id ${id} no ha sido encontrado`);
+            throw new NotFoundError(`La planta con el id ${id} no ha sido encontrada`);
         }
 
-        // Crear un nuevo usuario con los campos actualizados
+        if (existingPlant.sellerId !== sellerId) {
+            throw new NotFoundError("No tienes permiso para modificar esta planta.");
+        }
+
         const updatedPlant = new Plant(
             updates.name ? new NameValue(updates.name) : existingPlant.name,
             updates.description ? new DescriptionValue(updates.description) : existingPlant.description,
@@ -50,6 +53,7 @@ export class UpdatePlantUseCase {
             updates.toxicityLevel ? new ToxicityLevel(updates.toxicityLevel) : existingPlant.toxicityLevel,
             updates.price ? new PriceValue(updates.price) : existingPlant.price,
             updates.height ? new HeightValue(updates.height) : existingPlant.height,
+            existingPlant.sellerId,
             id
         );
 
