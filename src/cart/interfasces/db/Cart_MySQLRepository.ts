@@ -1,36 +1,55 @@
+// PASO 1: Importar el 'pool' desde tu archivo de base de datos
+import pool from '../../../core/db_MySQL';
 import { CartRepository } from '../../domain/Cart_Repository';
 import { Cart } from '../../domain/entities/Cart';
 import { CartItem } from '../../domain/entities/Cart_Item';
-import { MySQLClient } from '../../../core/db_MySQL';
 
 export class CartMySQLRepository implements CartRepository {
+
+  // PASO 2: Eliminar cualquier referencia a MySQLClient o al método getConnection
+
   async getCartByUser(userId: number): Promise<Cart | null> {
-    const connection = await MySQLClient.getInstance();
+    let connection;
+    try {
+      // Pide una conexión del pool
+      connection = await pool.getConnection();
 
-    const [cartRows]: any[] = await connection.execute(
-      'SELECT id FROM carts WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
+      const [cartRows]: any[] = await connection.execute(
+        'SELECT id FROM carts WHERE user_id = ? LIMIT 1',
+        [userId]
+      );
 
-    if (cartRows.length === 0) return null;
+      if (cartRows.length === 0) return null;
 
-    const cartId = cartRows[0].id;
+      const cartId = cartRows[0].id;
 
-    const [itemRows]: any[] = await connection.execute(
-      'SELECT plant_id, quantity, price_snapshot FROM cart_items WHERE cart_id = ?',
-      [cartId]
-    );
+      const [itemRows]: any[] = await connection.execute(
+        'SELECT plant_id, quantity, price_snapshot FROM cart_items WHERE cart_id = ?',
+        [cartId]
+      );
 
-    const items = itemRows.map(
-      (row: any) => new CartItem(row.plant_id, row.quantity, row.price_snapshot)
-    );
+      const items = itemRows.map(
+        (row: any) => new CartItem(row.plant_id, row.quantity, row.price_snapshot)
+      );
 
-    return new Cart(cartId, userId, items);
+      return new Cart(cartId, userId, items);
+
+    } catch (error) {
+      console.error("Error fetching cart from MySQL:", error);
+      throw new Error("Failed to fetch cart from database");
+    } finally {
+      // PASO 3: Liberar siempre la conexión al finalizar
+      if (connection) {
+        connection.release();
+      }
+    }
   }
 
   async addItemToCart(userId: number, item: CartItem): Promise<void> {
-    const connection = await MySQLClient.getInstance();
+    let connection;
     try {
+      connection = await pool.getConnection();
+      // Inicia la transacción en la conexión obtenida del pool
       await connection.beginTransaction();
 
       const [cartRows]: any[] = await connection.execute(
@@ -65,38 +84,69 @@ export class CartMySQLRepository implements CartRepository {
           [cartId, item.plantId, item.quantity, item.priceSnapshot]
         );
       }
-
+      
+      // Si todo fue bien, confirma la transacción
       await connection.commit();
+
     } catch (err) {
-      await connection.rollback();
-      throw err;
+      // Si algo falla, revierte la transacción
+      if (connection) {
+        await connection.rollback();
+      }
+      console.error("Error adding item to cart (transaction rolled back):", err);
+      throw new Error("Failed to add item to cart");
+    } finally {
+      // Libera la conexión, tanto si la transacción tuvo éxito como si falló
+      if (connection) {
+        connection.release();
+      }
     }
   }
 
   async removeItemFromCart(userId: number, plantId: number): Promise<void> {
-    const connection = await MySQLClient.getInstance();
-    const [cartRows]: any[] = await connection.execute(
-      'SELECT id FROM carts WHERE user_id = ?',
-      [userId]
-    );
-    if (cartRows.length === 0) return;
-    const cartId = cartRows[0].id;
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      const [cartRows]: any[] = await connection.execute(
+        'SELECT id FROM carts WHERE user_id = ?',
+        [userId]
+      );
+      if (cartRows.length === 0) return;
+      const cartId = cartRows[0].id;
 
-    await connection.execute(
-      'DELETE FROM cart_items WHERE cart_id = ? AND plant_id = ?',
-      [cartId, plantId]
-    );
+      await connection.execute(
+        'DELETE FROM cart_items WHERE cart_id = ? AND plant_id = ?',
+        [cartId, plantId]
+      );
+    } catch (error) {
+      console.error("Error removing item from cart:", error);
+      throw new Error("Failed to remove item from cart");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
   }
 
   async clearCart(userId: number): Promise<void> {
-    const connection = await MySQLClient.getInstance();
-    const [cartRows]: any[] = await connection.execute(
-      'SELECT id FROM carts WHERE user_id = ?',
-      [userId]
-    );
-    if (cartRows.length === 0) return;
-    const cartId = cartRows[0].id;
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      const [cartRows]: any[] = await connection.execute(
+        'SELECT id FROM carts WHERE user_id = ?',
+        [userId]
+      );
+      if (cartRows.length === 0) return;
+      const cartId = cartRows[0].id;
 
-    await connection.execute('DELETE FROM cart_items WHERE cart_id = ?', [cartId]);
+      await connection.execute('DELETE FROM cart_items WHERE cart_id = ?', [cartId]);
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      throw new Error("Failed to clear cart");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
   }
 }
