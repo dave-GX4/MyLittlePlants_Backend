@@ -1,4 +1,6 @@
-import { MySQLClient } from "../../../core/db_MySQL";
+// PASO 1: Importar el 'pool' por defecto desde tu archivo de base de datos
+import pool from "../../../core/db_MySQL"; 
+
 import { Plant } from "../../dominio/entities/Plant";
 import { PlantRepository } from "../../dominio/Plant_Repository";
 import { DescriptionValue } from "../../dominio/entities/valueObject/Description_Value";
@@ -16,13 +18,14 @@ import { ToxicityLevel } from "../../dominio/entities/valueObject/Toxocity_Value
 import { WateringFrequencyValue } from "../../dominio/entities/valueObject/Watering_Value";
 
 export class PlantMySQLRepository implements PlantRepository {
-  private async getConnection() {
-    return await MySQLClient.getInstance();
-  }
 
+  // PASO 2: Eliminar el método `getConnection`. Ya no es necesario.
+  
   async addPlant(plant: Plant): Promise<void> {
-    const connection = await this.getConnection();
+    let connection;
     try {
+      // Pide una conexión del pool
+      connection = await pool.getConnection(); 
       await connection.execute(
         `INSERT INTO plants (
           name, description, imageUrl, wateringFrequency, sunlightRequirement, 
@@ -45,7 +48,6 @@ export class PlantMySQLRepository implements PlantRepository {
           plant.sellerId 
         ]
       );
-      console.log(`La planta se creó correctamente para el vendedor ${plant.sellerId}`);
     } catch (error) {
       console.error("Error al crear la planta en MySQL:", error);
       if (error instanceof Error) {
@@ -53,16 +55,17 @@ export class PlantMySQLRepository implements PlantRepository {
       }
       throw new Error("Fallo al crear la planta en la base de datos");
     } finally {
+      // PASO 3: Liberar la conexión para devolverla al pool
       if (connection) {
-        connection.end();
+        connection.release();
       }
     }
   }
 
   async getById(id: number): Promise<Plant> {
-    const connection = await this.getConnection();
-    
+    let connection;
     try {
+      connection = await pool.getConnection();
       const [rows]: any = await connection.execute(
         `SELECT * FROM plants WHERE id = ?`,
         [id]
@@ -86,51 +89,60 @@ export class PlantMySQLRepository implements PlantRepository {
         new ToxicityLevel(plantData.toxicityLevel),
         new PriceValue(plantData.price),
         new HeightValue(plantData.height),
+        plantData.sellerId,
         plantData.id
       );
     } catch (error) {
       console.error("Error fetching plant from MySQL:", error);
-      // Relanza el error si ya es un NotFoundError
       if (error instanceof NotFoundError) throw error;
       throw new Error("Failed to fetch plant from database");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
   }
     
   async getAll(): Promise<Plant[]> {
-    const connection = await this.getConnection();
-    
+    let connection;
     try {
+      connection = await pool.getConnection();
       const [rows]: any = await connection.execute(
         `SELECT * FROM plants`
       );
 
-      return rows.map((plantsData: any) => 
+      return rows.map((plantData: any) => 
         new Plant(
-          new NameValue(plantsData.name),
-          new DescriptionValue(plantsData.description),
-          new ImageUrlValue(plantsData.imageUrl),
-          new WateringFrequencyValue(plantsData.wateringFrequency),
-          new SunlightRequirementValue(plantsData.sunlightRequirement),
-          new FertilizationFrequencyValue(plantsData.fertilizationFrequency),
-          new TemperatureRangeValue(plantsData.temperatureRange),
-          new HumidityRequirementValue(plantsData.humidityRequirement),
-          new SoilTypeValue(plantsData.soilType),
-          new ToxicityLevel(plantsData.toxicityLevel),
-          new PriceValue(plantsData.price),
-          new HeightValue(plantsData.height),
-          plantsData.id
+          new NameValue(plantData.name),
+          new DescriptionValue(plantData.description),
+          new ImageUrlValue(plantData.imageUrl),
+          new WateringFrequencyValue(plantData.wateringFrequency),
+          new SunlightRequirementValue(plantData.sunlightRequirement),
+          new FertilizationFrequencyValue(plantData.fertilizationFrequency),
+          new TemperatureRangeValue(plantData.temperatureRange),
+          new HumidityRequirementValue(plantData.humidityRequirement),
+          new SoilTypeValue(plantData.soilType),
+          new ToxicityLevel(plantData.toxicityLevel),
+          new PriceValue(plantData.price),
+          new HeightValue(plantData.height),
+          plantData.sellerId,
+          plantData.id
         )
       );
     } catch (error) {
       console.error("Error fetching plants from MySQL:", error);
       throw new Error("Failed to fetch plants from database");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
   }
     
   async delete(id: number): Promise<void> {
-    const connection = await this.getConnection();
-    
+    let connection;
     try {
+      connection = await pool.getConnection();
       await connection.execute(
         `DELETE FROM plants WHERE id = ?`,
         [id]
@@ -138,6 +150,10 @@ export class PlantMySQLRepository implements PlantRepository {
     } catch (error) {
       console.error("Error deleting plant from MySQL:", error);
       throw new Error("Failed to delete plant from database");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
   }
     
@@ -146,10 +162,9 @@ export class PlantMySQLRepository implements PlantRepository {
       throw new Error("Tanto el ID de la planta como el ID del vendedor son requeridos para actualizar");
     }
 
-    const connection = await this.getConnection();
-
+    let connection;
     try {
-      // Mapeo de propiedades a columnas
+      connection = await pool.getConnection();
       const fieldsMap: Record<string, any> = {
         name: plant.name?.value,
         description: plant.description?.value,
@@ -190,67 +205,76 @@ export class PlantMySQLRepository implements PlantRepository {
         throw new Error("La planta no fue encontrada o no tienes permiso para actualizarla.");
       }
 
-      await connection.execute(query, values);
     } catch (error) {
         console.error("Error al actualizar la planta en la db:", error);
         throw new Error("Fallo al actualizar la planta en la base de datos");
     } finally {
-        if (connection) connection.end();
+        if (connection) {
+          connection.release();
+        }
     }
   }
 
   async search(query: string): Promise<Plant[]> {
-    const connection = await this.getConnection();
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      const sql = `
+        SELECT * FROM plants
+        WHERE
+          name LIKE ? OR
+          description LIKE ? OR
+          imageUrl LIKE ? OR
+          sunlightRequirement LIKE ? OR
+          temperatureRange LIKE ? OR
+          humidityRequirement LIKE ? OR
+          soilType LIKE ? OR
+          toxicityLevel LIKE ? OR
+          CAST(wateringFrequency AS CHAR) LIKE ? OR
+          CAST(fertilizationFrequency AS CHAR) LIKE ? OR
+          CAST(price AS CHAR) LIKE ? OR
+          CAST(height AS CHAR) LIKE ?
+      `;
 
-    // Usamos LIKE para coincidencias parciales
-    const sql = `
-      SELECT * FROM plants
-      WHERE
-        name LIKE ? OR
-        description LIKE ? OR
-        imageUrl LIKE ? OR
-        sunlightRequirement LIKE ? OR
-        temperatureRange LIKE ? OR
-        humidityRequirement LIKE ? OR
-        soilType LIKE ? OR
-        toxicityLevel LIKE ? OR
-        CAST(wateringFrequency AS CHAR) LIKE ? OR
-        CAST(fertilizationFrequency AS CHAR) LIKE ? OR
-        CAST(price AS CHAR) LIKE ? OR
-        CAST(height AS CHAR) LIKE ?
-    `;
+      const likeQuery = `%${query}%`;
+      const [rows] = await connection.execute(sql, Array(12).fill(likeQuery));
 
-    const likeQuery = `%${query}%`;
-    const [rows] = await connection.execute(sql, Array(12).fill(likeQuery));
-
-    return (rows as any[]).map(row =>
-      new Plant(
-        new NameValue(row.name),
-        new DescriptionValue(row.description),
-        new ImageUrlValue(row.imageUrl),
-        new WateringFrequencyValue(row.wateringFrequency),
-        new SunlightRequirementValue(row.sunlightRequirement),
-        new FertilizationFrequencyValue(row.fertilizationFrequency),
-        new TemperatureRangeValue(row.temperatureRange),
-        new HumidityRequirementValue(row.humidityRequirement),
-        new SoilTypeValue(row.soilType),
-        new ToxicityLevel(row.toxicityLevel),
-        new PriceValue(row.price),
-        new HeightValue(row.height),
-        row.id
-      )
-    );
+      return (rows as any[]).map(row =>
+        new Plant(
+          new NameValue(row.name),
+          new DescriptionValue(row.description),
+          new ImageUrlValue(row.imageUrl),
+          new WateringFrequencyValue(row.wateringFrequency),
+          new SunlightRequirementValue(row.sunlightRequirement),
+          new FertilizationFrequencyValue(row.fertilizationFrequency),
+          new TemperatureRangeValue(row.temperatureRange),
+          new HumidityRequirementValue(row.humidityRequirement),
+          new SoilTypeValue(row.soilType),
+          new ToxicityLevel(row.toxicityLevel),
+          new PriceValue(row.price),
+          new HeightValue(row.height),
+          row.sellerId,
+          row.id
+        )
+      );
+    } catch (error) {
+      console.error("Error searching plants in MySQL:", error);
+      throw new Error("Failed to search plants in database");
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
   }
 
   async findBySellerId(sellerId: number): Promise<Plant[]> {
-    const connection = await this.getConnection();
+    let connection;
     try {
+      connection = await pool.getConnection();
       const sql = "SELECT * FROM plants WHERE sellerId = ?";
-
       const [rows] = await connection.execute(sql, [sellerId]);
 
       if (!Array.isArray(rows) || rows.length === 0) {
-        console.log(`No se encontraron plantas para el vendedor con ID: ${sellerId}`);
         return [];
       }
 
@@ -272,7 +296,6 @@ export class PlantMySQLRepository implements PlantRepository {
           row.id
         );
       });
-      console.log(`Se encontraron ${plants.length} plantas para el vendedor con ID: ${sellerId}`);
       return plants;
     } catch (error) {
       console.error(`Error al buscar plantas por sellerId (${sellerId}) en MySQL:`, error);
@@ -282,7 +305,7 @@ export class PlantMySQLRepository implements PlantRepository {
       throw new Error("Fallo al buscar las plantas del vendedor en la base de datos");
     } finally {
       if (connection) {
-          connection.end();
+          connection.release();
       }
     }
   }
