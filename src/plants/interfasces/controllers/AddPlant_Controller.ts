@@ -8,25 +8,30 @@ export class AddPlantController {
     try {
       const user = (req as any).user;
 
-      // Verificación de seguridad: ¿hay un usuario autenticado? ¿Tiene el rol de vendedor?
       if (!user || !user.id || user.role !== 'Vendedor') {
-        console.log('❌ Acceso no autorizado o rol incorrecto.');
         res.status(403).json({ error: 'Acceso denegado. Se requiere rol de vendedor.' });
         return;
       }
 
-      const sellerId = user.id;
-
       if (!req.file) {
-        console.log('❌ No se recibió ninguna imagen.');
         res.status(400).json({ error: 'La imagen de la planta es un campo requerido.' });
         return;
       }
 
-      const imageUrl = req.file.path;
+      // --- INICIO DE LA LÓGICA CORREGIDA ---
 
-      console.log('📝 Received request body:', req.body);
-      console.log('🖼️ Received file info:', req.file);
+      // 1. Obtenemos el nombre del archivo guardado por Multer.
+      const filename = req.file.filename;
+
+      // 2. Construimos la URL base del servidor de forma dinámica.
+      //    Ej: http://98.83.75.45:3000
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      // 3. Creamos la URL pública completa para la imagen.
+      //    Ej: http://98.83.75.45:3000/uploads/plantImage-1754...jpg
+      const fullImageUrl = `${baseUrl}/uploads/${filename}`;
+
+      // --- FIN DE LA LÓGICA CORREGIDA ---
 
       const { 
         name, 
@@ -42,19 +47,20 @@ export class AddPlantController {
         height,
       } = req.body;
 
+      // Validación de campos de texto (esto está bien como está)
       if (!name || !description || !wateringFrequency ||
           !sunlightRequirement || !fertilizationFrequency ||
           !temperatureRange || !humidityRequirement || !soilType || !toxicityLevel ||
           price === undefined  || height === undefined) {
-        console.log('Campos requeridos faltan');
         res.status(400).json({ error: 'Faltan campos de texto requeridos en el cuerpo de la petición.' });
         return;
       }
-
+      
+      // 4. Pasamos la URL completa (fullImageUrl) al caso de uso.
       await this.addPlantUseCase.run(
         name,
         description,
-        imageUrl,
+        fullImageUrl, // <--- Aquí usamos la URL completa que construimos
         wateringFrequency,
         sunlightRequirement,
         fertilizationFrequency,
@@ -64,13 +70,13 @@ export class AddPlantController {
         toxicityLevel,
         Number(price),
         Number(height),
-        sellerId
-      )
-      console.log('Planta creado con éxito');
+        user.id // Usamos el sellerId del usuario autenticado
+      );
       
-      res.status(201).json({ message: 'exitoso' });
+      res.status(201).json({ message: 'Planta creada con éxito' });
+
     } catch (error) {
-      console.error('Error en el controlador:', error);
+      console.error('Error en el controlador al añadir planta:', error);
       res.status(500).json({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
